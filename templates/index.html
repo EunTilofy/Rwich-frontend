@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Follicular lymphoma: Prediction of POD24 and uplift of R maintenance therapy</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group .options {
+            display: flex;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .form-group .option {
+            flex: 1;
+            border-right: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .form-group .option:last-child {
+            border-right: none;
+        }
+        .form-group .option:hover {
+            background-color: #ddd;
+        }
+        .form-group .option.selected {
+            background-color: #4CAF50;
+            color: white;
+        }
+        input[type="number"], select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .button-container button {
+            width: 49%;
+        }
+        .graph_container {
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        img {
+            max-width: 50%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>24个月进展风险预测以及R维持获益等级估计</h1>
+        <p>请在以下表单内填入患者相关数据：</p>
+        <form action="/predict" method="post">
+            <div class="form-group">
+                <label for="patient_id">患者ID:</label>
+                <input type="text" id="patient_id" name="patient_id" required>
+            </div>
+            <div class="form-group">
+                <label for="gender">性别:</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('gender').value = '女';">女(female)</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('gender').value = '男';">男(male)</div>
+                </div>
+                <input type="hidden" id="gender" name="gender" value="">
+            </div>
+            <div class="form-group">
+                <label for="ldh">LDH（首次治疗）>240是预后不良因素:</label>
+                <input type="number" id="ldh" name="ldh" min="0">
+            </div>
+            <div class="form-group">
+                <label for="lymph_node_size">治疗时单个淋巴结是否大于6cm:</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('lymph_node_size').value = '否';">否</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('lymph_node_size').value = '是';">是</div>
+                </div>
+                <input type="hidden" id="lymph_node_size" name="lymph_node_size" value="">
+            </div>
+            <div class="form-group">
+                <label for="beta2_mg">β2微球蛋白β2-MG（首次治疗）>3是预后不良因素:</label>
+                <input type="number" id="beta2_mg" name="beta2_mg" min="0" step="any">
+            </div>
+            <div class="form-group">
+                <label for="max_tumor_size">最大病灶/cm（首次治疗）:</label>
+                <input type="number" id="max_tumor_size" name="max_tumor_size" min="0" step="any">
+            </div>
+            <div class="form-group">
+                <label for="treatment_age">启动一线治疗年龄:</label>
+                <input type="number" id="treatment_age" name="treatment_age" min="0">
+            </div>
+            <div class="form-group">
+                <label for="lymph_monocyte_ratio">淋巴单核细胞比（首次治疗）:</label>
+                <input type="number" id="lymph_monocyte_ratio" name="lymph_monocyte_ratio" min="0" step="any">
+            </div>
+            <div class="form-group">
+                <label for="suv_max">SUVmax（首次治疗）:</label>
+                <input type="number" id="suv_max" name="suv_max" min="0" step="any">
+            </div>
+            <div class="form-group">
+                <label for="lymph_node_count">一线治疗时累及淋巴结区数目（大于等于5预后不良）:</label>
+                <input type="number" id="lymph_node_count" name="lymph_node_count" min="0">
+            </div>
+            <div class="form-group">
+                <label for="lymphocyte">淋巴细胞绝对值（首次治疗）:</label>
+                <input type="number" id="lymphocyte" name="lymphocyte" min="0" step="any">
+            </div>
+            <div class="form-group">
+                <label for="ecog_score">治疗时ECOG（体力评分，一般>2是预后不良因素）:</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('ecog_score').value = 0; ">0</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('ecog_score').value = 1; ">1</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('ecog_score').value = 2; ">2</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('ecog_score').value = 3; ">3</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('ecog_score').value = 4; ">4</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('ecog_score').value = 5; ">5</div>
+                </div>
+                <input type="hidden" id="ecog_score" name="ecog_score" value="">
+            </div>
+            <div class="form-group">
+                <label for="b_symptoms">治疗时B症状:</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('b_symptoms').value = 0;">无</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('b_symptoms').value = 1;">有</div>
+                </div>
+                <input type="hidden" id="b_symptoms" name="b_symptoms" value="">
+            </div>
+            <div class="form-group">
+                <label for="initial_stage">首次开始治疗前分期（1-2局限期，3-4进展期）:</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('initial_stage').value = 0;">0</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('initial_stage').value = 1;">1</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('initial_stage').value = 2;">2</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('initial_stage').value = 3;">3</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('initial_stage').value = 4;">4</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('initial_stage').value = 5;">5</div>
+                </div>
+                <input type="hidden" id="initial_stage" name="initial_stage" value="">
+            </div>
+            <div class="form-group">
+                <label for="pathology_grade">一线治疗时病理分级:</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('pathology_grade').value = '1-2级';">1-2级</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('pathology_grade').value = '3a级';">3a级</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('pathology_grade').value = 'tFL,DLBCL';">tFL,DLBCL</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('pathology_grade').value = '1-2级，局灶3a级';">1-2级，局灶3a级</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('pathology_grade').value = '3级';">3级</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('pathology_grade').value = '3b级';">3b级</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('pathology_grade').value = '3a级，可能有转化';">3a级，可能有转化</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('pathology_grade').value = 'TFL,DLBCL';">TFL,DLBCL</div>
+                </div>
+                <input type="hidden" id="pathology_grade" name="pathology_grade" value="">
+            </div>
+            <div class="form-group">
+                <label for="bone_marrow_involvement">治疗时是否骨髓受累（骨髓穿刺明确，有是预后不良因素）:</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('bone_marrow_involvement').value = '否';">否</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('bone_marrow_involvement').value = '是';">是</div>
+                </div>
+                <input type="hidden" id="bone_marrow_involvement" name="bone_marrow_involvement" value="">
+            </div>
+            <div class="form-group">
+                <label for="wbc">WBC（首次治疗）:</label>
+                <input type="number" id="wbc" name="wbc" min="0" step="any">
+            </div>
+            <div class="form-group">
+                <label for="hgb">HGB（首次治疗）< 120是预后不良因素:</label>
+                <input type="number" id="hgb" name="hgb" min="0" step="any">
+            </div>
+            <div class="form-group">
+                <label for="plt">PLT（首次治疗）:</label>
+                <input type="number" id="plt" name="plt" min="0">
+            </div>
+            <div class="form-group">
+                <label for="monocyte">单核细胞绝对值（首次治疗）:</label>
+                <input type="number" id="monocyte" name="monocyte" min="0" step="any">
+            </div>
+            <div class="form-group">
+                <label for="reason_for_treatment">启动一线治疗原因:</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('reason_for_treatment').value = '1 ：受累淋巴结区≥3个，直径≥3cm';">1 ：受累淋巴结区≥3个，直径≥3cm</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('reason_for_treatment').value = '2 ：任何淋巴结或者结外肿块直径≥7cm';">2 ：任何淋巴结或者结外肿块直径≥7cm</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('reason_for_treatment').value = '3 ：B症状';">3 ：B症状</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('reason_for_treatment').value = '4 ：脾大';">4 ：脾大</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('reason_for_treatment').value = '5 ：胸腔积液、腹水';">5 ：胸腔积液、腹水</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('reason_for_treatment').value = '6 ：白细胞＜1.0x10^9/L或血小板＜100x10^9/L';">6 ：白细胞＜1.0x10^9/L或血小板＜100x10^9/L</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('reason_for_treatment').value = '7 ：白血病（恶性细胞＞5x10^9/L）';">7 ：白血病（恶性细胞＞5x10^9/L</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('reason_for_treatment').value = '8 ：患者意愿';">8 ：患者意愿</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('reason_for_treatment').value = '9 ：其他（请记录具体因素）';">9 ：其他（请记录具体因素</div>
+                </div>
+                <input type="hidden" id="reason_for_treatment" name="reason_for_treatment" value="">
+            </div>
+            <div class="form-group">
+                <label for="classification">分类1（选择适合的分类）:</label>
+                <div class="options">
+                    <!-- <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '';">请选择 </div> -->
+                    <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '1 : chop';">1 : chop </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '2 : fc';">2 : fc </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '3 : rchop';">3 : rchop </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '4 : rfc';">4 : rfc </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '5 : cvp';">5 : cvp </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '6 : rcvp';">6 : rcvp </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '7 : 放疗';">7 : 放疗 </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '8 : R单药';">8 : R单药 </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '9 : 放化疗';">9 : 放化疗 </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '10 : RB';">10 : RB </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '11 : GCHOP';">11 : GCHOP </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '12 : WW';">12 : WW </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '13 : 姑息对症';">13 : 姑息对症 </div>
+                </div>
+                <input type="hidden" id="classification" name="classification" value="">
+            </div>
+            <div class="form-group">
+                <label for="efficacy_group">评效分组1（CR, PD, PR, SD）:</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('efficacy_group').value = 'CR';">CR </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('efficacy_group').value = 'PD';">PD </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('efficacy_group').value = 'PR';">PR </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('efficacy_group').value = 'SD';">SD </div>
+                </div>
+                <input type="hidden" id="efficacy_group" name="efficacy_group" value="">
+            </div>
+            <div class="form-group">
+                <label for="rweichi">R维持分类（Rweichi）：</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('rweichi').value = '无';">无</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('rweichi').value = '有';">有</div>
+                </div>
+                <input type="hidden" id="rweichi" name="rweichi" value="">
+            </div>
+            <div class="form-group">
+                <label for="fps">一线PFS(确诊时间-进展时间)：</label>
+                <input type="number" id="fps" name="fps" min="0" step="any">
+            </div>
+            <div class="form-group">
+                <label for="progress_after">一线后是否进展：</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('progress_after').value = '否';">否</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('progress_after').value = '是';">是</div>
+                </div>
+                <input type="hidden" id="progress_after" name="progress_after" value="">
+            </div>
+            <div class="form-group">
+                <label for="pod24">是否POD24：</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('pod24').value = '无';">无</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('pod24').value = '有';">有</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('pod24').value = '非免疫化疗';">非免疫化疗</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('pod24').value = '随访<24个月';">随访 < 24个月</div>
+                </div>
+                <input type="hidden" id="pod24" name="pod24" value="">
+            </div>
+            
+            <div class="form-group">
+                <label for="FLIPI_1">治疗时FLIPI-1（最终版）：</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_1').value = 0;">0</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_1').value = 1;">1</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_1').value = 2;">2</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_1').value = 3;">3</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_1').value = 4;">4</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_1').value = 5;">5</div>
+                </div>
+                <input type="hidden" id="FLIPI_1" name="FLIPI_1" value="">
+            </div>
+            
+            <div class="form-group">
+                <label for="FLIPI_2">治疗FLIPI2（最终版）：</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_2').value = 0;">0</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_2').value = 1;">1</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_2').value = 2;">2</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_2').value = 3;">3</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_2').value = 4;">4</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_2').value = 5;">5</div>
+                </div>
+                <input type="hidden" id="FLIPI_2" name="FLIPI_2" value="">
+            </div>
+            
+            <div class="form-group">
+                <label for="FLIPI_PI">一线治疗时PRIMA-PI：</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_PI').value = 0;">0</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_PI').value = 1;">1</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_PI').value = 2;">2</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_PI').value = 3;">3</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_PI').value = 4;">4</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_PI').value = 5;">5</div>
+                </div>
+                <input type="hidden" id="FLIPI_PI" name="FLIPI_PI" value="">
+            </div>
+            
+            
+            <div class="form-group">
+                <label for="FLIPI_PI">预计24个月内进展风险等级</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_pod24').value = 1;">很低</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_pod24').value = 2;">较低</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_pod24').value = 3;">中等</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_pod24').value = 4;">较高</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_pod24').value = 5;">很高</div>
+                </div>
+                <input type="hidden" id="predict_pod24" name="predict_pod24" value="">
+            </div>
+            
+            <div class="form-group">
+                <label for="FLIPI_PI">预计采取 R 维持获益等级</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_uplift').value = 1;">很低</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_uplift').value = 2;">较低</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_uplift').value = 3;">中等</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_uplift').value = 4;">较高</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_uplift').value = 5;">很高</div>
+                </div>
+                <input type="hidden" id="predict_uplift" name="predict_uplift" value="">
+            </div>
+            
+            <div class="form-group">
+                <label for="FLIPI_PI">您是否推荐患者采取 R 维持？</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 1;">不推荐</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 2;">推荐</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 3;">非常推荐</div>
+                </div>
+                <input type="hidden" id="conc_human" name="conc_human" value="">
+            </div>
+            
+            <div class="button-container">
+                <button type="submit">开始预测</button>
+                <button type="button" onclick="clearForm()">清空</button>
+            </div>
+        </form>
+        
+        {% if result %}
+            <h2>预测结果:</h2>
+            <p>{{ result[1] }}</p>
+            <p>{{ result[0] }}</p>
+            <p>是否推荐采用 R 维持：{{ result[2] }}</p>
+            
+            <div class="graph_container">
+                <img src="data:image/png;base64,{{ result[3] }}" alt="Predict_y Histogram">
+                <img src="data:image/png;base64,{{ result[4] }}" alt="Uplift Histogram">
+            </div>
+            
+            <div class="form-group">
+                <label for="FLIPI_PI">您最终是否推荐患者采取 R 维持？</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 1;">不推荐</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 2;">推荐</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 3;">非常推荐</div>
+                </div>
+                <input type="hidden" id="conc_human" name="conc_human" value="">
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function selectOption(option) {
+            // Remove 'selected' class from all siblings
+            const parent = option.parentNode;
+            const options = parent.getElementsByClassName('option');
+            for (let i = 0; i < options.length; i++) {
+                options[i].classList.remove('selected');
+            }
+            // Add 'selected' class to the clicked option
+            option.classList.add('selected');
+        }
+        
+        function clearForm() {
+            // Clear all input fields
+            const form = document.getElementById('prediction-form');
+            form.reset();
+
+            // Clear selected options
+            const formGroups = document.querySelectorAll('.form-group');
+            formGroups.forEach(formGroup => {
+                const options = formGroup.querySelectorAll('.option');
+                options.forEach(option => {
+                    option.classList.remove('selected');
+                });
+            });
+
+            // Clear result section
+            const resultSection = document.querySelector('.result-section');
+            resultSection.innerHTML = '';
+        }
+
+        // Initialize default selections
+        window.onload = function() {
+            const formGroups = document.querySelectorAll('.form-group');
+            formGroups.forEach(formGroup => {
+                const selectedOption = formGroup.querySelector('.option[selected]');
+                if (selectedOption) {
+                    selectedOption.classList.add('selected');
+                }
+            });
+        };
+    </script>
+</body>
+</html>
