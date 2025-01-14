@@ -67,7 +67,7 @@ def predict(inputs):
         '一线治疗时病理分级（绝大多数是1-2级和3a级，少数3b级和转化为大B细胞的）': inputs[7] if pd.notna(inputs[7]) else np.nan,
         '一线治疗时累及淋巴结区数目（大于等于5预后不良）': float(inputs[8]) if pd.notna(inputs[8]) else np.nan,
         '治疗时是否骨髓受累（骨髓穿刺明确，有是预后不良因素）': 1.0 if inputs[9] == "是" else 0.0,
-        '治疗时单个淋巴结是否大于6cm（大于6预后不良因素）': 1.0 if inputs[10] == "是" else 0.0,
+        '治疗时单个淋巴结是否大于6cm（大于6预后不良因素）': (1.0 if float(inputs[1])>=6.0 else 0.0) if pd.notna(inputs[1]) else np.nan,
         'LDH（首次治疗）>240是预后不良因素': float(inputs[11]) if pd.notna(inputs[11]) else np.nan,
         'β2微球蛋白β2-MG（首次治疗）>3是预后不良因素': inputs[12] if pd.notna(inputs[12]) else np.nan,
         'WBC（首次治疗）': float(inputs[13]) if pd.notna(inputs[13]) else np.nan,
@@ -152,7 +152,8 @@ def predict_route():
     pathology_grade = request.form['pathology_grade']
     lymph_node_count = request.form['lymph_node_count']
     bone_marrow_involvement = request.form['bone_marrow_involvement']
-    lymph_node_size = request.form['lymph_node_size']
+    # lymph_node_size = request.form['lymph_node_size']
+    lymph_node_size = None
     ldh = request.form['ldh']
     beta2_mg = request.form['beta2_mg']
     wbc = request.form['wbc']
@@ -164,14 +165,20 @@ def predict_route():
     reason_for_treatment = request.form['reason_for_treatment']
     classification = request.form['classification']
     efficacy_group = request.form['efficacy_group']
-    rweichi = request.form['rweichi']
-    fps = request.form['fps']
-    progress_after = request.form['progress_after']
-    pod24 = request.form['pod24']
+    # rweichi = request.form['rweichi']
+    rweichi = None
+    # fps = request.form['fps']
+    fps = None
+    progress_after = None
+    # progress_after = request.form['progress_after']
+    pod24 = None
     FLIPI_1 = request.form['FLIPI_1']
     FLIPI_2= request.form['FLIPI_2']
     FLIPI_PI = request.form['FLIPI_PI']
     patient_id = request.form['patient_id']
+    
+    if reason_for_treatment == '9 ：其他（请记录具体因素）':
+        reason_for_treatment = request.form['other_reason']
 
     inputs = [
         gender, max_tumor_size, suv_max, ecog_score, b_symptoms, initial_stage, treatment_age, pathology_grade,
