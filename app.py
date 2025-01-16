@@ -1,5 +1,5 @@
 from btdml import Binary_Treatment_DML
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from sklearn import svm
 from sklearn.datasets import make_classification
 from sklearn.metrics import accuracy_score
@@ -13,8 +13,8 @@ import matplotlib
 
 app = Flask(__name__)
 
-matplotlib.rcParams['font.sans-serif'] = ['SimHei']  # 使用黑体
 matplotlib.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+matplotlib.use('Agg')
 
 # Load the model
 with open('DML_model.pkl', 'rb') as f:
@@ -106,7 +106,7 @@ def predict(inputs):
     
     fig, ax = plt.subplots(figsize = (24, 12))
     ax.hist(predict_y_samples, bins = 20, color = 'blue', alpha = 0.7)
-    ax.set_title('24个月进展风险分布') 
+    ax.set_title('distribution of pod24') 
     ax.grid(True)
     ax.axvline(x=predict_y, color='red', linestyle = 'dashed', linewidth=2)
     buf = io.BytesIO()
@@ -117,7 +117,7 @@ def predict(inputs):
     
     fig, ax = plt.subplots(figsize = (24, 12))
     ax.hist(uplift_samples, bins = 20, color = 'blue', alpha = 0.7)
-    ax.set_title('R维持获益等级分布') 
+    ax.set_title('Distribution of uplift using R') 
     ax.grid(True)
     ax.axvline(x=uplift, color='red', linestyle = 'dashed', linewidth=2)
     buf = io.BytesIO()
@@ -186,9 +186,7 @@ def predict_route():
         lymphocyte, lymph_monocyte_ratio, reason_for_treatment, classification, efficacy_group, rweichi,
         fps, progress_after, pod24, FLIPI_1, FLIPI_2, FLIPI_PI, patient_id
     ]
-    
-    result = predict(inputs)
-    return render_template('index.html', result=result)
+    return jsonify(result = predict(inputs))
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, threaded = False)

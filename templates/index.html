@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Follicular lymphoma: Prediction of POD24 and uplift of R maintenance therapy</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -99,12 +100,11 @@
     <div class="container">
         <h1>24个月进展风险预测以及R维持获益等级估计</h1>
         <p>请在以下表单内填入患者相关数据：</p>
-        <form action="/predict" method="post">
+        <form id="Form">
             <div class="form-group">
                 <label for="patient_id">患者ID:</label>
                 <input type="text" id="patient_id" name="patient_id" placeholder="请输入患者ID" required>
-            </div>
-            
+            </div>    
             <div class="form-group">
                 <label for="gender">性别:</label>
                 <div class="options">
@@ -293,63 +293,7 @@
             </div>
             
             
-            <!-- !!!!!!!!!!!!!!!!!!!!!-->
-        
-            <!-- <div class="form-group">
-                <label for="lymph_node_size">治疗时单个淋巴结是否大于6cm:</label>
-                <div class="options">
-                    <div class="option" onclick="selectOption(this); document.getElementById('lymph_node_size').value = '否';">否</div>
-                    <div class="option" onclick="selectOption(this); document.getElementById('lymph_node_size').value = '是';">是</div>
-                </div>
-                <input type="hidden" id="lymph_node_size" name="lymph_node_size" value="">
-            </div> -->
-            
-            <!-- <div class="form-group">
-                <label for="rweichi">R维持分类（Rweichi）：</label>
-                <div class="options">
-                    <div class="option" onclick="selectOption(this); document.getElementById('rweichi').value = '无';">无</div>
-                    <div class="option" onclick="selectOption(this); document.getElementById('rweichi').value = '有';">有</div>
-                </div>
-                <input type="hidden" id="rweichi" name="rweichi" value="">
-            </div> -->
-            
-            <!-- <div class="form-group">
-                <label for="fps">一线PFS(确诊时间-进展时间)：</label>
-                <input type="number" id="fps" name="fps" min="0" step="any">
-            </div>
-            
-            <div class="form-group">
-                <label for="progress_after">一线后是否进展：</label>
-                <div class="options">
-                    <div class="option" onclick="selectOption(this); document.getElementById('progress_after').value = '否';">否</div>
-                    <div class="option" onclick="selectOption(this); document.getElementById('progress_after').value = '是';">是</div>
-                </div>
-                <input type="hidden" id="progress_after" name="progress_after" value="">
-            </div> -->
-            
-            <!-- <div class="form-group">
-                <label for="pod24">是否POD24：</label>
-                <div class="options">
-                    <div class="option" onclick="selectOption(this); document.getElementById('pod24').value = '无';">无</div>
-                    <div class="option" onclick="selectOption(this); document.getElementById('pod24').value = '有';">有</div>
-                    <div class="option" onclick="selectOption(this); document.getElementById('pod24').value = '非免疫化疗';">非免疫化疗</div>
-                    <div class="option" onclick="selectOption(this); document.getElementById('pod24').value = '随访<24个月';">随访 < 24个月</div>
-                </div>
-                <input type="hidden" id="pod24" name="pod24" value="">
-            </div> -->
-            
-            <!-- <div class="form-group">
-                <label for="FLIPI_1">启动一线治疗时FLIPI-1评分：</label>
-                <div class="options">
-                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_1').value = 0;">0</div>
-                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_1').value = 1;">1</div>
-                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_1').value = 2;">2</div>
-                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_1').value = 3;">3</div>
-                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_1').value = 4;">4</div>
-                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_1').value = 5;">5</div>
-                </div>
-                <input type="hidden" id="FLIPI_1" name="FLIPI_1" value="">
-            </div> -->
+            <!-- !!!!!!!!!!!!!!!!!!!!!-->      
             
             <div class="form-group">
                 <label for="FLIPI_1">启动一线治疗时FLIPI-1评分：</label>
@@ -383,9 +327,6 @@
                     <div class="option" onclick="selectOption(this); document.getElementById('PRIMA_PI').value = 0;">0</div>
                     <div class="option" onclick="selectOption(this); document.getElementById('PRIMA_PI').value = 1;">1</div>
                     <div class="option" onclick="selectOption(this); document.getElementById('PRIMA_PI').value = 2;">2</div>
-                    <!-- <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_PI').value = 3;">3</div>
-                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_PI').value = 4;">4</div>
-                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_PI').value = 5;">5</div> -->
                 </div>
                 <input type="hidden" id="FLIPI_PI" name="FLIPI_PI" value="">
             </div>
@@ -413,7 +354,6 @@
                 <div class="options">
                     <div class="option" onclick="selectOption(this); document.getElementById('predict_uplift').value = 1;">很低(低于20%人群)</div>
                     <div class="option" onclick="selectOption(this); document.getElementById('predict_uplift').value = 2;">较低(低于50%人群)</div>
-                    <!-- <div class="option" onclick="selectOption(this); document.getElementById('predict_uplift').value = 3;">中等</div> -->
                     <div class="option" onclick="selectOption(this); document.getElementById('predict_uplift').value = 4;">较高(高于50%人群)</div>
                     <div class="option" onclick="selectOption(this); document.getElementById('predict_uplift').value = 5;">很高(高于80%人群)</div>
                 </div>
@@ -436,32 +376,70 @@
                 <button type="button" onclick="clearForm()">清空</button>
             </div>
         </form>
-        
-        {% if result %}
-            <h2>预测结果:</h2>
-            <p>{{ result[1] }}</p>
+            
+        <div class = "result" id = "resultDisplay">
+            <h2></h2>
+            <p></p>
+            <p></p>
+            <p></p>
+            <!-- <h2>预测结果:</h2> -->
+            <!-- <p>{{ result[1] }}</p>
             <p>{{ result[0] }}</p>
-            <p>是否推荐采用 R 维持：{{ result[2] }}</p>
+            <p>是否推荐采用 R 维持：{{ result[2] }}</p> -->
             
             <div class="graph_container">
-                <img src="data:image/png;base64,{{ result[3] }}" alt="Predict_y Histogram">
-                <img src="data:image/png;base64,{{ result[4] }}" alt="Uplift Histogram">
+                <img></img>
+                <img></img>
+                <!-- <img src="data:image/png;base64,{{ result[3] }}" alt="Predict_y Histogram">
+                <img src="data:image/png;base64,{{ result[4] }}" alt="Uplift Histogram"> -->
             </div>
             
-            <div class="form-group">
-                <label for="FLIPI_PI">您最终是否推荐患者采取 R 维持？</label>
-                <div class="options">
-                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 1;">强烈不推荐</div>
-                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 2;">不推荐</div>
-                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 3;">比较推荐</div>
-                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 4;">非常推荐</div>
-                </div>
-                <input type="hidden" id="conc_human" name="conc_human" value="">
-            </div>
-        {% endif %}
+            <div class="form-group"></div>
+        </div>
     </div>
 
     <script>
+        $(document).ready(function(){
+            $('#Form').submit(function(event){
+                event.preventDefault();
+                var formData = $(this).serialize();
+                
+                $.ajax({
+                    url: '/predict',
+                    type: 'POST',
+                    data: formData,
+                    success: function(response){
+                        $('#resultDisplay h2').text('预测结果:');
+                        $('#resultDisplay p:nth-child(2)').text(response.result[1]);
+                        $('#resultDisplay p:nth-child(3)').text(response.result[0]);
+                        $('#resultDisplay p:nth-child(4)').text('是否推荐采用 R 维持：' + response.result[2]);
+                        $('#resultDisplay .graph_container img:first-child').attr('src', 'data:image/png;base64,' + response.result[3]);
+                        $('#resultDisplay .graph_container img:last-child').attr('src', 'data:image/png;base64,' + response.result[4]);
+                        $('#resultDisplay .form-group').append(`
+                            <label for="FLIPI_PI">您最终是否推荐患者采取 R 维持？</label>
+                            <div class="options">
+                                <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 1;">强烈不推荐</div>
+                                <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 2;">不推荐</div>
+                                <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 3;">比较推荐</div>
+                                <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 4;">非常推荐</div>
+                            </div>
+                            <input type="hidden" id="conc_human" name="conc_human" value="">
+                        `);
+                        $('#resultDisplay').show();
+                    },
+                    error: function(error){
+                        $('#resultDisplay p:nth-child(2)').text("Invalid input");
+                        $('#resultDisplay p:nth-child(3)').text("");
+                        $('#resultDisplay p:nth-child(4)').text("");
+                        $('#resultDisplay .graph_container img:first-child').removeAttr('src');
+                        $('#resultDisplay .graph_container img:last-child').removeAttr('src');
+                        $('#resultDisplay').show(); // Show the result section with error message
+                    }
+                });
+            });
+        });
+        
+        
         function selectOption(option) {
             // Remove 'selected' class from all siblings
             const parent = option.parentNode;
