@@ -415,16 +415,25 @@
                         $('#resultDisplay p:nth-child(4)').text('是否推荐采用 R 维持：' + response.result[2]);
                         $('#resultDisplay .graph_container img:first-child').attr('src', 'data:image/png;base64,' + response.result[3]);
                         $('#resultDisplay .graph_container img:last-child').attr('src', 'data:image/png;base64,' + response.result[4]);
-                        $('#resultDisplay .form-group').append(`
-                            <label for="FLIPI_PI">您最终是否推荐患者采取 R 维持？</label>
-                            <div class="options">
+                        if ($('#resultDisplay .form-group').find('label[for="FLIPI_PI"]').length === 0) {
+                            $('#resultDisplay .form-group').append(`
+                                <label for="FLIPI_PI">您最终是否推荐患者采取 R 维持？</label>
+                                <div class="options">
+                                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 1;">强烈不推荐</div>
+                                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 2;">不推荐</div>
+                                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 3;">比较推荐</div>
+                                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 4;">非常推荐</div>
+                                </div>
+                                <input type="hidden" id="conc_human" name="conc_human" value="">
+                            `);
+                        } else {
+                            $('#resultDisplay .form-group').find('.options').html(`
                                 <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 1;">强烈不推荐</div>
                                 <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 2;">不推荐</div>
                                 <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 3;">比较推荐</div>
                                 <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 4;">非常推荐</div>
-                            </div>
-                            <input type="hidden" id="conc_human" name="conc_human" value="">
-                        `);
+                            `);
+                        }
                         $('#resultDisplay').show();
                     },
                     error: function(error){
@@ -433,7 +442,7 @@
                         $('#resultDisplay p:nth-child(4)').text("");
                         $('#resultDisplay .graph_container img:first-child').removeAttr('src');
                         $('#resultDisplay .graph_container img:last-child').removeAttr('src');
-                        $('#resultDisplay').show(); // Show the result section with error message
+                        $('#resultDisplay').show();
                     }
                 });
             });
@@ -441,58 +450,52 @@
         
         
         function selectOption(option) {
-            // Remove 'selected' class from all siblings
             const parent = option.parentNode;
             const options = parent.getElementsByClassName('option');
             for (let i = 0; i < options.length; i++) {
                 options[i].classList.remove('selected');
             }
-            // Add 'selected' class to the clicked option
             option.classList.add('selected');
         }
         
         function clearForm() {
-        // 1. 获取表单元素并重置它
-        const form = document.querySelector('form[action="/predict"]'); // 使用表单的 action 属性来定位表单
-        if (form) {
-            form.reset(); // 重置表单的所有输入元素
-        }
-
-        // 2. 清除所有已选中的选项（假设这些是通过添加 'selected' 类来表示的）
-        const selectedOptions = document.querySelectorAll('.option.selected');
-        selectedOptions.forEach(option => {
-            option.classList.remove('selected');
-            // 如果有其他视觉上的变化或状态需要清除，也在这里处理
-        });
-
-        // 3. 清除其他动态生成的内容或显示的结果
-        const resultSection = document.querySelector('.result-section');
-        if (resultSection) {
-            resultSection.innerHTML = ''; // 清空结果部分的内容
-        }
-
-        // 4. 针对特定类型的输入（如文本框、复选框等）进行额外处理（如果需要）
-        const textInputs = document.querySelectorAll('input[type="text"], input[type="number"], textarea');
-        textInputs.forEach(input => {
-            input.value = ''; // 清空文本框、数字输入框和文本区域
-        });
-
-        // 5. 对于特定的逻辑或交互元素，比如点击后显示的输入框，也需要重置它们的状态
-        const otherInputContainer = document.getElementById('other-input-container');
-        if (otherInputContainer) {
-            otherInputContainer.style.display = 'none'; // 隐藏其他输入框容器
-            const otherReasonInput = document.getElementById('other_reason');
-            if (otherReasonInput) {
-                otherReasonInput.value = ''; // 清空其他原因输入框
+            const form = document.querySelector('form[action="/predict"]');
+            if (form) {
+                form.reset();
             }
+            const selectedOptions = document.querySelectorAll('.option.selected');
+            selectedOptions.forEach(option => {
+                option.classList.remove('selected');
+            });
+            const resultSection = document.querySelector('.result-section');
+            if (resultSection) {
+                resultSection.innerHTML = '';
+            }
+            const textInputs = document.querySelectorAll('input[type="text"], input[type="number"], textarea');
+            textInputs.forEach(input => {
+                input.value = '';
+            });
+            const otherInputContainer = document.getElementById('other-input-container');
+            if (otherInputContainer) {
+                otherInputContainer.style.display = 'none';
+                const otherReasonInput = document.getElementById('other_reason');
+                if (otherReasonInput) {
+                    otherReasonInput.value = '';
+                }
+            }
+            const hiddenInputs = document.querySelectorAll('input[type="hidden"]');
+            hiddenInputs.forEach(input => {
+                input.value = '';
+            });
+            $('#resultDisplay h2').text('');
+            $('#resultDisplay p:nth-child(2)').text('');
+            $('#resultDisplay p:nth-child(3)').text('');
+            $('#resultDisplay p:nth-child(4)').text('');
+            $('#resultDisplay .graph_container img').removeAttr('src');
+            $('#Form')[0].reset();
+            $('#conc_human').val('');
+            $('#resultDisplay').hide();
         }
-
-        // 6. 如果有隐藏的输入字段用于存储值（如 'reason_for_treatment'），也需要重置它们
-        const hiddenInputs = document.querySelectorAll('input[type="hidden"]');
-        hiddenInputs.forEach(input => {
-            input.value = ''; // 清空隐藏字段的值
-        });
-    }
         
         function toggleOtherInput() {
             var container = document.getElementById('other-input-container');
