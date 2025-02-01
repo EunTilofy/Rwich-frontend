@@ -379,20 +379,21 @@
             
         <div class = "result" id = "resultDisplay">
             <h2></h2>
-            <p></p>
-            <p></p>
-            <p></p>
-            <!-- <h2>预测结果:</h2> -->
-            <!-- <p>{{ result[1] }}</p>
-            <p>{{ result[0] }}</p>
-            <p>是否推荐采用 R 维持：{{ result[2] }}</p> -->
             
-            <div class="graph_container">
-                <img></img>
-                <img></img>
+            <!-- <div class="graph_container"> -->
+            <p></p>
+            <img></img>
+            
+            <p></p>
+            <img></img>
+            
+            <p></p>
+            <img></img>
+            <img></img>
+            <p></p>
                 <!-- <img src="data:image/png;base64,{{ result[3] }}" alt="Predict_y Histogram">
                 <img src="data:image/png;base64,{{ result[4] }}" alt="Uplift Histogram"> -->
-            </div>
+            <!-- </div> -->
             
             <div class="form-group"></div>
         </div>
@@ -410,11 +411,14 @@
                     data: formData,
                     success: function(response){
                         $('#resultDisplay h2').text('预测结果:');
-                        $('#resultDisplay p:nth-child(2)').text(response.result[1]);
-                        $('#resultDisplay p:nth-child(3)').text(response.result[0]);
-                        $('#resultDisplay p:nth-child(4)').text('是否推荐采用 R 维持：' + response.result[2]);
-                        $('#resultDisplay .graph_container img:first-child').attr('src', 'data:image/png;base64,' + response.result[3]);
-                        $('#resultDisplay .graph_container img:last-child').attr('src', 'data:image/png;base64,' + response.result[4]);
+                        $('#resultDisplay p:nth-child(2)').text('一、进展风险预测结果');
+                        $('#resultDisplay img:nth-child(3)').attr('src', 'data:image/png;base64,' + response.result[0]);
+                        $('#resultDisplay p:nth-child(4)').text('二、进展风险走势');
+                        $('#resultDisplay img:nth-child(5)').attr('src', 'data:image/png;base64,' + response.result[1]);
+                        $('#resultDisplay p:nth-child(6)').text('三、R维持获益情况评估');
+                        $('#resultDisplay img:nth-child(7)').attr('src', 'data:image/png;base64,' + response.result[2]);
+                        $('#resultDisplay img:nth-child(8)').attr('src', 'data:image/png;base64,' + response.result[3]);
+                        $('#resultDisplay p:nth-child(9)').text('四、各类特征指标');
                         if ($('#resultDisplay .form-group').find('label[for="FLIPI_PI"]').length === 0) {
                             $('#resultDisplay .form-group').append(`
                                 <label for="FLIPI_PI">您最终是否推荐患者采取 R 维持？</label>

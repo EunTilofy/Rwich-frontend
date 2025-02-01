@@ -7,6 +7,7 @@ import pickle
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 import io
 import base64
 import matplotlib
@@ -17,14 +18,35 @@ matplotlib.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
 matplotlib.use('Agg')
 
 # Load the model
-with open('DML_model.pkl', 'rb') as f:
-    DML = pickle.load(f)
+with open('DML_model_6.pkl', 'rb') as f:
+    DML_6 = pickle.load(f)
+
+with open('DML_model_12.pkl', 'rb') as f:
+    DML_12 = pickle.load(f)
+    
+with open('DML_model_24.pkl', 'rb') as f:
+    DML_24 = pickle.load(f)
+    
+with open('DML_model_36.pkl', 'rb') as f:
+    DML_36 = pickle.load(f)
+    
+with open('predict_y_6.pkl', 'rb') as f:
+    predict_y_6 = pickle.load(f)
+
+with open('predict_y_12.pkl', 'rb') as f:
+    predict_y_12 = pickle.load(f)
+    
+with open('predict_y_24.pkl', 'rb') as f:
+    predict_y_24 = pickle.load(f)
+    
+with open('predict_y_36.pkl', 'rb') as f:
+    predict_y_36 = pickle.load(f)
     
 with open('svm_model.pkl', 'rb') as f:
     SVM = pickle.load(f)
     
-with open('predict_y.pkl', 'rb') as f:
-    predict_y_samples = pickle.load(f)
+# with open('predict_y.pkl', 'rb') as f:
+#     predict_y_samples = pickle.load(f)
 with open('uplift.pkl', 'rb') as f:
     uplift_samples = pickle.load(f)
 
@@ -45,6 +67,187 @@ cate_features = ['性别（0:女；1:男）', '一线治疗时病理分级（绝
                '治疗时是否骨髓受累（骨髓穿刺明确，有是预后不良因素）', '治疗时单个淋巴结是否大于6cm（大于6预后不良因素）',
                 '分类1(1-chop;2-fc;3-rchop;4-rfc;5-cvp;6-rcvp;7-放疗；8-R单药；9-放化疗；10-RB;11-GCHOP;12-WW;13-姑息对症)', '评效分组1',
                 '启动一线治疗原因（新补充）']
+
+def get_survival(val):
+    fig, ax = plt.subplots(figsize = (8, 4))
+    ax.set_xlabel('month')
+    ax.set_ylabel('survival possibility')
+    x = [6, 12, 24, 36]
+    val = [ 1-x for x in val]
+    ax.plot(x, val, marker = 'o', linestyle = '--', color = 'r')
+    ax.set_xticks(x)
+    ax.set_yticks(val)
+    buf = io.BytesIO()
+    plt.savefig(buf, format = 'png')
+    url = base64.b64encode(buf.getvalue()).decode('utf8')
+    buf.close()
+    plt.close(fig)
+    return url
+
+with open("Z.pkl", "rb") as f:
+    Z = pickle.load(f)
+
+with open("X.pkl", "rb") as f:
+    X = pickle.load(f)
+
+with open("y_combined.pkl", "rb") as f:
+    y_combined = pickle.load(f)
+
+def get_svm(y, x):
+    x1_min, x1_max, x2_min, x2_max = [-0.4831802622349537, 0.4370673107224893, -0.04382664337769359, 1.004533718080136]
+    xx, yy = np.meshgrid(np.arange(x1_min, x1_max, 0.01),
+                     np.arange(x2_min, x2_max, 0.01))
+    Z.reshape(xx.shape)
+    cmap = ListedColormap(['blue', 'orange', 'green', 'red'])
+    fig, ax = plt.subplots(figsize = (10, 8))
+    ax.contourf(xx, yy, Z, alpha=0.3, cmap=cmap)
+    colors = ['blue', 'orange', 'green', 'red']
+    labels = ['Rweichi=0, pod24=0', 'Rweichi=0, pod24=1', 'Rweichi=1, pod24=0', 'Rweichi=1, pod24=1']
+    for i in range(4):
+        ax.scatter(X[y_combined == i]['uplift'], X[y_combined == i]['predict_y'], 
+            color=colors[i], label=labels[i], edgecolor='k', s=70, alpha=0.7)
+    ax.set_xlabel('uplift')
+    ax.set_ylabel('predict_y')
+    ax.set_title('SVM Decision Boundaries for Four Classes')
+    ax.legend()
+    
+    ax.scatter([x], [y], color='cyan', label=f'the patient',
+               edgecolor='yellow', linewidth=2, s=600, marker='*', alpha=1)
+    
+    buf = io.BytesIO()
+    plt.savefig(buf, format = 'png')
+    url = base64.b64encode(buf.getvalue()).decode('utf8')
+    buf.close()
+    plt.close(fig)
+    return url
+
+def get_rwch(uplift_val, conc, per_up):
+    # 获益值 ｜ 推荐情况
+    # uplift_val（保留两位小数） ｜ conc（直接显示）
+    # f"预计采用 R 维持的获益等级高于 {per_up:.2f}% 的人群。"
+    data = [
+        ["获益值", "推荐情况"],
+        ["{:.2f}".format(uplift_val), conc],
+        [f"预计采用 R 维持的获益等级高于 {per_up:.2f}% 的人群。"]
+    ]
+    fig, ax = plt.subplots(figsize = (8, 3))
+    ax.axis('off')
+    cell_width = 0.5
+    cell_height = 0.5
+    for i in range(4):
+        ax.add_line(Line2D([0, 2 * cell_width], [i * cell_height, i * cell_height], color='black'))
+    for j in range(3):
+        if j == 1:
+            ax.add_line(Line2D([j * cell_width, j * cell_width], [cell_height, 3 * cell_height], color='black'))
+        else:
+            ax.add_line(Line2D([j * cell_width, j * cell_width], [0, 3 * cell_height], color='black'))
+    ax.text(0.5 * cell_width, 2.5 * cell_height, data[0][0], ha='center', va='center', fontproperties='STHeiti', fontsize = 20)
+    ax.text(1.5 * cell_width, 2.5 * cell_height, data[0][1], ha='center', va='center', fontproperties='STHeiti', fontsize = 20)
+    ax.text(0.5 * cell_width, 1.5 * cell_height, data[1][0], ha='center', va='center', fontproperties='STHeiti', fontsize = 20)
+    ax.text(1.5 * cell_width, 1.5 * cell_height, data[1][1], ha='center', va='center', fontproperties='STHeiti', fontsize = 20)
+    ax.text(1.0 * cell_width, 0.5 * cell_height, data[2][0], ha='center', va='center', fontproperties='STHeiti', fontsize = 20)
+    ax.set_xlim(0, 2 * cell_width)
+    ax.set_ylim(0, 3 * cell_height)
+    buf = io.BytesIO()
+    plt.savefig(buf, format = 'png')
+    url = base64.b64encode(buf.getvalue()).decode('utf8')
+    buf.close()
+    plt.close(fig)
+    return url
+
+from matplotlib.font_manager import FontProperties
+    
+from matplotlib.lines import Line2D
+def get_pod(pod_val, pod_per):
+    # 进行时间（月） ｜ 6 ｜ 12 ｜ 24 ｜ 36
+    # 进展概率 ｜ pod_val[0] | pod_val[1] | pod_val[2] | pod_val[3]
+    # 超过人群百分比 ｜ pod_per[0] | pod_per[1] | pod_per[2] | pod_per[3]
+    data = [
+        ['进行时间(月)', 6,12,24,36],
+        ['进展概率', "{:.2f}".format(pod_val[0]) , "{:.2f}".format(pod_val[1]) , "{:.2f}".format(pod_val[2]) , "{:.2f}".format(pod_val[3])],
+        ['超过人群百分比(%)', "{:.2f}".format(pod_per[0]) , "{:.2f}".format(pod_per[1]) , "{:.2f}".format(pod_per[2]) , "{:.2f}".format(pod_per[3])]
+    ]
+    fig, ax = plt.subplots(figsize = (10, 3))
+    ax.axis('off')
+    cell_width = 0.07
+    cell_height = 0.07
+    font = FontProperties(family=['STHeiti'])
+    for i in range(4):
+        ax.add_line(Line2D([0, 6 * cell_width], [i * cell_height, i * cell_height], color='black'))
+    ax.add_line(Line2D([0, 0], [0, 3 * cell_height], color='black'))
+    for j in range(1, 7):
+        if j == 1:
+            ax.add_line(Line2D([j * 2 * cell_width, j * 2 * cell_width], [0, 3 * cell_height], color='black'))
+        else:
+            ax.add_line(Line2D([(j + 1) * cell_width, (j + 1) * cell_width], [0, 3 * cell_height], color='black'))
+    for i in range(3):
+        for j in range(5):
+            x_pos = (j + 0.5) * (2 * cell_width if j == 0 else cell_width) + (j != 0) * cell_width
+            ax.text(x_pos, (2.5 - i) * cell_height, data[i][j],
+                    fontsize=20, ha='center', va='center', fontproperties=font)
+    ax.set_xlim(0, 6 * cell_width)
+    ax.set_ylim(0, 3 * cell_height)
+    buf = io.BytesIO()
+    plt.savefig(buf, format = 'png')
+    url = base64.b64encode(buf.getvalue()).decode('utf8')
+    buf.close()
+    plt.close(fig)
+    return url
+    
+    
+def solve(pod_val, pod_per, uplift_val, conc, per_up):
+    # 一、2*4 表格
+
+    # 1. pod - 6 12 24 36 的概率
+    # 2. 分别位于 top 百分数
+    
+    pod_url = get_pod(pod_val, pod_per)
+    
+    # 二、survival 分析 曲线  
+    url_survival = get_survival(pod_val)
+    
+    # 三、Rweichi 2*2 表格
+        # uplift 获益性，推荐值
+        # uplift 的 top 百分数
+    url_rwch = get_rwch(uplift_val, conc, per_up)
+    
+    # 四、2维图
+    url_svm = get_svm(pod_val[2], uplift_val)
+    
+    # 五、重要指标
+
+    # 1. 重要指标全人群分布柱状图，用竖线显示患者的位置
+    # 2. 重要指标全人群获益性分桶图，用竖线显示患者的位置
+    
+    
+    return pod_url, url_survival, url_rwch, url_svm
+
+def main_solve(df):
+    uplift_val = []
+    pod_val = []
+    pod_per = []
+    uplift_val.append(DML_6.predict(df, if_train=True, if_cali=False)[0])
+    uplift_val.append(DML_12.predict(df, if_train=True, if_cali=False)[0])
+    uplift_val.append(DML_24.predict(df, if_train=True, if_cali=False)[0])
+    uplift_val.append(DML_36.predict(df, if_train=True, if_cali=False)[0])
+    
+    pod_val.append(DML_6.predict_outcome(df, if_train=True, if_cali=False)[0])
+    pod_val.append(DML_12.predict_outcome(df, if_train=True, if_cali=False)[0])
+    pod_val.append(DML_24.predict_outcome(df, if_train=True, if_cali=False)[0])
+    pod_val.append(DML_36.predict_outcome(df, if_train=True, if_cali=False)[0]) 
+    pod_per.append(100 * ((predict_y_6 <= pod_val[0]).mean()))
+    pod_per.append(100 * ((predict_y_12 <= pod_val[1]).mean()))
+    pod_per.append(100 * ((predict_y_24 <= pod_val[2]).mean()))
+    pod_per.append(100 * ((predict_y_36 <= pod_val[3]).mean()))
+    
+    tmp = pd.DataFrame([[uplift_val[2], pod_val[2]]], columns=['uplift', 'predict_y'])
+    tmp_class = SVM.predict(tmp)[0]
+    conc =  "不推荐" if tmp_class == 0 else ("非常推荐" if tmp_class == 1 else "推荐")
+    
+    per_up = 100 * ((uplift_samples <= uplift_val[2]).mean())
+    # uplift = f"预计采用 R 维持的获益等级高于 {per_up:.2f}% 的人群。"
+    
+    return solve(pod_val, pod_per, uplift_val[2], conc, per_up)
 
 def predict(inputs):
     processed_inputs = []
@@ -96,45 +299,43 @@ def predict(inputs):
         )
     
     input_df[cate_features] = input_df[cate_features].astype('str')
+    
+    return main_solve(input_df)
         
-    uplift = DML.predict(input_df)[0]
-    predict_y = DML.predict_outcome(input_df)[0]
+    # uplift_val = DML.predict(input_df)[0]
+    # predict_y_val = DML.predict_outcome(input_df)[0]
     
-    tmp = pd.DataFrame([[uplift, predict_y]], columns=['uplift', 'predict_y'])
-    tmp_class = SVM.predict(tmp)[0]
-    conc =  "不推荐" if tmp_class == 0 else ("非常推荐" if tmp_class == 1 else "推荐")
+    # fig, ax = plt.subplots(figsize = (24, 12))
+    # ax.hist(predict_y_samples, bins = 20, color = 'blue', alpha = 0.7)
+    # ax.set_title('distribution of pod24') 
+    # ax.grid(True)
+    # ax.axvline(x=predict_y_val, color='red', linestyle = 'dashed', linewidth=2)
+    # buf = io.BytesIO()
+    # plt.savefig(buf, format='png')
+    # url1 = base64.b64encode(buf.getvalue()).decode('utf8')
+    # buf.close()
+    # plt.close(fig)
     
-    fig, ax = plt.subplots(figsize = (24, 12))
-    ax.hist(predict_y_samples, bins = 20, color = 'blue', alpha = 0.7)
-    ax.set_title('distribution of pod24') 
-    ax.grid(True)
-    ax.axvline(x=predict_y, color='red', linestyle = 'dashed', linewidth=2)
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png')
-    url1 = base64.b64encode(buf.getvalue()).decode('utf8')
-    buf.close()
-    plt.close(fig)
+    # fig, ax = plt.subplots(figsize = (24, 12))
+    # ax.hist(uplift_samples, bins = 20, color = 'blue', alpha = 0.7)
+    # ax.set_title('Distribution of uplift using R') 
+    # ax.grid(True)
+    # ax.axvline(x=uplift_val, color='red', linestyle = 'dashed', linewidth=2)
+    # buf = io.BytesIO()
+    # plt.savefig(buf, format='png')
+    # url2 = base64.b64encode(buf.getvalue()).decode('utf8')
+    # buf.close()
+    # plt.close(fig)
     
-    fig, ax = plt.subplots(figsize = (24, 12))
-    ax.hist(uplift_samples, bins = 20, color = 'blue', alpha = 0.7)
-    ax.set_title('Distribution of uplift using R') 
-    ax.grid(True)
-    ax.axvline(x=uplift, color='red', linestyle = 'dashed', linewidth=2)
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png')
-    url2 = base64.b64encode(buf.getvalue()).decode('utf8')
-    buf.close()
-    plt.close(fig)
-    
-    percentile_y = 100 * ((predict_y_samples <= predict_y).mean())
-    predict_y = f"24 个月内的进展风险高于 {percentile_y:.2f}% 的人群。"
+    # percentile_y = 100 * ((predict_y_samples <= predict_y_val).mean())
+    # predict_y = f"24 个月内的进展风险高于 {percentile_y:.2f}% 的人群。"
     
     # print(max(uplift_samples), uplift)
     
-    percentile_up = 100 * ((uplift_samples <= uplift).mean())
-    uplift = f"预计采用 R 维持的获益等级高于 {percentile_up:.2f}% 的人群。"
+    # percentile_up = 100 * ((uplift_samples <= uplift_val).mean())
+    # uplift = f"预计采用 R 维持的获益等级高于 {percentile_up:.2f}% 的人群。"
     
-    return uplift, predict_y, conc, url1, url2
+    # return solve(uplift_val, predict_y_val, uplift, predict_y, conc, url1, url2)
 
 @app.route('/', methods=['GET'])
 def index():
