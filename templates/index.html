@@ -10,7 +10,7 @@
             margin: 20px;
         }
         .container {
-            max-width: 900px;
+            max-width: 80%;
             margin: auto;
             border: 1px solid #ccc;
             border-radius: 8px;
@@ -86,7 +86,7 @@
             margin-top: 20px;
         }
         img {
-            max-width: 50%;
+            max-width: 100%;
             height: auto;
         }
         #other-input-container input[type="text"] {
@@ -377,80 +377,158 @@
             </div>
         </form>
             
-        <div class = "result" id = "resultDisplay">
-            <h2></h2>
-            
-            <!-- <div class="graph_container"> -->
-            <p></p>
-            <img></img>
-            
-            <p></p>
-            <img></img>
-            
-            <p></p>
-            <img></img>
-            <img></img>
-            <p></p>
-                <!-- <img src="data:image/png;base64,{{ result[3] }}" alt="Predict_y Histogram">
-                <img src="data:image/png;base64,{{ result[4] }}" alt="Uplift Histogram"> -->
-            <!-- </div> -->
-            
-            <div class="form-group"></div>
-        </div>
-    </div>
-
+        <div class = "result" id = "resultDisplay"></div>
+    
     <script>
-        $(document).ready(function(){
-            $('#Form').submit(function(event){
-                event.preventDefault();
-                var formData = $(this).serialize();
+        // $(document).ready(function(){
+        //     $('#Form').submit(function(event){
+        //         event.preventDefault();
+        //         var formData = $(this).serialize();
                 
-                $.ajax({
-                    url: '/predict',
-                    type: 'POST',
-                    data: formData,
-                    success: function(response){
-                        $('#resultDisplay h2').text('预测结果:');
-                        $('#resultDisplay p:nth-child(2)').text('一、进展风险预测结果');
-                        $('#resultDisplay img:nth-child(3)').attr('src', 'data:image/png;base64,' + response.result[0]);
-                        $('#resultDisplay p:nth-child(4)').text('二、进展风险走势');
-                        $('#resultDisplay img:nth-child(5)').attr('src', 'data:image/png;base64,' + response.result[1]);
-                        $('#resultDisplay p:nth-child(6)').text('三、R维持获益情况评估');
-                        $('#resultDisplay img:nth-child(7)').attr('src', 'data:image/png;base64,' + response.result[2]);
-                        $('#resultDisplay img:nth-child(8)').attr('src', 'data:image/png;base64,' + response.result[3]);
-                        $('#resultDisplay p:nth-child(9)').text('四、各类特征指标');
-                        if ($('#resultDisplay .form-group').find('label[for="FLIPI_PI"]').length === 0) {
-                            $('#resultDisplay .form-group').append(`
-                                <label for="FLIPI_PI">您最终是否推荐患者采取 R 维持？</label>
-                                <div class="options">
-                                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 1;">强烈不推荐</div>
-                                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 2;">不推荐</div>
-                                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 3;">比较推荐</div>
-                                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 4;">非常推荐</div>
-                                </div>
-                                <input type="hidden" id="conc_human" name="conc_human" value="">
-                            `);
-                        } else {
-                            $('#resultDisplay .form-group').find('.options').html(`
-                                <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 1;">强烈不推荐</div>
-                                <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 2;">不推荐</div>
-                                <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 3;">比较推荐</div>
-                                <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 4;">非常推荐</div>
-                            `);
-                        }
-                        $('#resultDisplay').show();
-                    },
-                    error: function(error){
-                        $('#resultDisplay p:nth-child(2)').text("Invalid input");
-                        $('#resultDisplay p:nth-child(3)').text("");
-                        $('#resultDisplay p:nth-child(4)').text("");
-                        $('#resultDisplay .graph_container img:first-child').removeAttr('src');
-                        $('#resultDisplay .graph_container img:last-child').removeAttr('src');
-                        $('#resultDisplay').show();
+        //         $.ajax({
+        //             url: '/predict',
+        //             type: 'POST',
+        //             data: formData,
+        //             success: function(response){
+        //                 $('#resultDisplay h2').text('预测结果:');
+        //                 $('#resultDisplay p:nth-child(2)').text('一、进展风险预测结果');
+        //                 $('#resultDisplay img:nth-child(3)').attr('src', 'data:image/png;base64,' + response.result[0]).css({ 'width': '50%', 'height': '50%' });
+        //                 $('#resultDisplay p:nth-child(4)').text('二、进展风险走势');
+        //                 $('#resultDisplay img:nth-child(5)').attr('src', 'data:image/png;base64,' + response.result[1]).css({ 'width': '50%', 'height': '50%' });
+        //                 $('#resultDisplay p:nth-child(6)').text('三、R维持获益情况评估');
+        //                 $('#resultDisplay img:nth-child(7)').attr('src', 'data:image/png;base64,' + response.result[2]).css({ 'width': '50%', 'height': '50%' });
+        //                 $('#resultDisplay img:nth-child(8)').attr('src', 'data:image/png;base64,' + response.result[3]).css({ 'width': '50%', 'height': '50%' });
+        //                 $('#resultDisplay p:nth-child(9)').text('四、各类特征指标');
+        //                 $('#resultDisplay img:nth-child(10)').attr('src', 'data:image/png;base64,' + response.result[4][0][1]);
+        //                 $('#resultDisplay img:nth-child(11)').attr('src', 'data:image/png;base64,' + response.result[4][1][1]);
+        //                 $('#resultDisplay img:nth-child(12)').attr('src', 'data:image/png;base64,' + response.result[4][2][1]);
+        //                 $('#resultDisplay img:nth-child(13)').attr('src', 'data:image/png;base64,' + response.result[4][3][1]);
+        //                 $('#resultDisplay img:nth-child(14)').attr('src', 'data:image/png;base64,' + response.result[4][4][1]);
+        //                 $('#resultDisplay img:nth-child(15)').attr('src', 'data:image/png;base64,' + response.result[4][5][1]);
+        //                 $('#resultDisplay img:nth-child(16)').attr('src', 'data:image/png;base64,' + response.result[4][6][1]);
+        //                 $('#resultDisplay img:nth-child(17)').attr('src', 'data:image/png;base64,' + response.result[4][7][1]);
+        //                 $('#resultDisplay img:nth-child(18)').attr('src', 'data:image/png;base64,' + response.result[4][8][1]);
+        //                 $('#resultDisplay img:nth-child(19)').attr('src', 'data:image/png;base64,' + response.result[4][9][1]);
+        //                 $('#resultDisplay img:nth-child(20)').attr('src', 'data:image/png;base64,' + response.result[4][10][1]);
+        //                 $('#resultDisplay img:nth-child(21)').attr('src', 'data:image/png;base64,' + response.result[4][11][1]);
+                        
+        //                 if ($('#resultDisplay .form-group').find('label[for="FLIPI_PI"]').length === 0) {
+        //                     $('#resultDisplay .form-group').append(`
+        //                         <label for="FLIPI_PI">您最终是否推荐患者采取 R 维持？</label>
+        //                         <div class="options">
+        //                             <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 1;">强烈不推荐</div>
+        //                             <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 2;">不推荐</div>
+        //                             <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 3;">比较推荐</div>
+        //                             <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 4;">非常推荐</div>
+        //                         </div>
+        //                         <input type="hidden" id="conc_human" name="conc_human" value="">
+        //                     `);
+        //                 } else {
+        //                     $('#resultDisplay .form-group').find('.options').html(`
+        //                         <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 1;">强烈不推荐</div>
+        //                         <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 2;">不推荐</div>
+        //                         <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 3;">比较推荐</div>
+        //                         <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 4;">非常推荐</div>
+        //                     `);
+        //                 }
+        //                 $('#resultDisplay').show();
+        //             },
+        //             error: function(error){
+        //                 $('#resultDisplay p:nth-child(2)').text("Invalid input");
+        //                 $('#resultDisplay p:nth-child(3)').text("");
+        //                 $('#resultDisplay p:nth-child(4)').text("");
+        //                 $('#resultDisplay').show();
+        //             }
+        //         });
+        //     });
+        // });
+        
+        $(document).ready(function(){
+    $('#Form').submit(function(event){
+        event.preventDefault();
+        var formData = $(this).serialize();
+
+        $.ajax({
+            url: '/predict',
+            type: 'POST',
+            data: formData,
+            success: function(response){
+                // 清空之前的展示内容
+                $('#resultDisplay').empty();
+
+                // 添加预测结果的标题
+                $('#resultDisplay').append('<h2>预测结果:</h2>');
+
+                // 动态生成各个部分的内容
+                const sections = [
+                    { title: '一、进展风险预测结果', imgSrc: response.result[0] },
+                    { title: '二、进展风险走势', imgSrc: response.result[1] },
+                    { title: '三、R维持获益情况评估', imgsSrc: [response.result[2], response.result[3]] }
+                ];
+
+                sections.forEach(section => {
+                    $('#resultDisplay').append(`<p>${section.title}</p>`);
+                    if (Array.isArray(section.imgsSrc)) {
+                        section.imgsSrc.forEach(imgSrc => {
+                            addImageWithCaption(imgSrc);
+                        });
+                    } else {
+                        addImageWithCaption(section.imgSrc);
                     }
                 });
-            });
+
+                // 特征指标部分
+                $('#resultDisplay').append('<p>四、各类特征指标</p>');
+                for(let i = 0; i < response.result[4].length; i++) {
+                    addImageWithCaption(response.result[4][i][1], response.result[4][i][0], 1);
+                }
+
+                // 用户反馈选项
+                appendUserFeedbackOption();
+
+                $('#resultDisplay').show();
+            },
+            error: function(error){
+                $('#resultDisplay').html("<p>Invalid input</p>").show();
+            }
         });
+    });
+
+    function addImageWithCaption(imageData, captionText, scale = 0) {
+        let container = $('<div class="image-container"></div>');
+        let imgCaption = $(`<div class="image-caption">${captionText || ''}</div>`);
+        let imgElement = $(`<img src="data:image/png;base64,${imageData}" alt="${captionText}">`);
+        if (scale === 0) {
+            imgElement.css({ 'width': '50%', 'height': '50%' });
+        }
+        container.append(imgCaption, imgElement);
+        $('#resultDisplay').append(container);
+    }
+
+    function appendUserFeedbackOption() {
+        if ($('#resultDisplay .form-group').length === 0) {
+            $('#resultDisplay').append(`
+                <div class="form-group">
+                    <label for="FLIPI_PI">您最终是否推荐患者采取 R 维持？</label>
+                    <div class="options">
+                        <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 1;">强烈不推荐</div>
+                        <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 2;">不推荐</div>
+                        <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 3;">比较推荐</div>
+                        <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 4;">非常推荐</div>
+                    </div>
+                    <input type="hidden" id="conc_human" name="conc_human" value="">
+                </div>
+            `);
+        } else {
+            $('#resultDisplay .form-group .options').html(`
+                <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 1;">强烈不推荐</div>
+                <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 2;">不推荐</div>
+                <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 3;">比较推荐</div>
+                <div class="option" onclick="selectOption(this); document.getElementById('conc_human').value = 4;">非常推荐</div>
+            `);
+        }
+    }
+});
         
         
         function selectOption(option) {
