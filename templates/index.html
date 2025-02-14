@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Follicular lymphoma: Prediction of POD24 and uplift of R maintenance therapy</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 60%;
+            margin: auto;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        /* .form-group label {
+            display: block;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        } */
+        .form-group label {
+            display: inline-block;
+            margin-right: 10px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            /* font-weight: bold; */
+        }
+        .form-group .options {
+            display: flex;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .form-group .option {
+            flex: 1;
+            border-right: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .form-group .calculate-button {
+            display: inline-block;
+            padding: 5px 10px;
+            color: black;
+            background-color: #ddd;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .form-group .calculate-button:hover {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .form-group .option:last-child {
+            border-right: none;
+        }
+        .form-group .option:hover {
+            background-color: #ddd;
+        }
+        .form-group .option.selected {
+            background-color: #4CAF50;
+            color: white;
+        }
+        input[type="number"], select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .button-container button {
+            width: 49%;
+        }
+        .graph_container {
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        #other-input-container input[type="text"] {
+            margin-top: 5px;
+            padding: 5px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>24个月进展风险预测以及R维持获益等级估计</h1>
+        <p>请在以下表单内填入患者相关数据：</p>
+        <form id="Form">
+            <div class="form-group">
+                <label for="patient_id">患者ID:</label>
+                <input type="text" id="patient_id" name="patient_id" placeholder="请输入患者ID" required>
+            </div>    
+            <div class="form-group">
+                <label for="gender">性别:</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('gender').value = '女';">女(female)</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('gender').value = '男';">男(male)</div>
+                </div>
+                <input type="hidden" id="gender" name="gender" value="">
+            </div>
+            
+            <div class="form-group">
+                <label for="treatment_age">启动一线治疗时年龄（岁）：</label>
+                <input type="number" id="treatment_age" name="treatment_age" min="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="ecog_score">启动一线治疗时ECOG评分（体力评分，一般>2是预后不良因素）:</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('ecog_score').value = 0; ">0</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('ecog_score').value = 1; ">1</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('ecog_score').value = 2; ">2</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('ecog_score').value = 3; ">3</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('ecog_score').value = 4; ">4</div>
+                    <!-- <div class="option" onclick="selectOption(this); document.getElementById('ecog_score').value = 5; ">5</div> -->
+                </div>
+                <input type="hidden" id="ecog_score" name="ecog_score" value="">
+            </div>
+            
+            <div class="form-group">
+                <label for="b_symptoms">启动一线治疗时是否存在B症状:</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('b_symptoms').value = '无';">否</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('b_symptoms').value = '有';">是</div>
+                </div>
+                <input type="hidden" id="b_symptoms" name="b_symptoms" value="">
+            </div>
+            
+            <div class="form-group">
+                <label for="pathology_grade">启动一线治疗时病理分级：</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('pathology_grade').value = '1-2级';">1-2级</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('pathology_grade').value = '3a级';">3a级</div>
+                    <!-- <div class="option" onclick="selectOption(this); document.getElementById('pathology_grade').value = 'tFL,DLBCL';">tFL,DLBCL</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('pathology_grade').value = '1-2级，局灶3a级';">1-2级，局灶3a级</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('pathology_grade').value = '3级';">3级</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('pathology_grade').value = '3b级';">3b级</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('pathology_grade').value = '3a级，可能有转化';">3a级，可能有转化</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('pathology_grade').value = 'TFL,DLBCL';">TFL,DLBCL</div> -->
+                </div>
+                <input type="hidden" id="pathology_grade" name="pathology_grade" value="">
+            </div>
+            
+            <div class="form-group">
+                <label for="initial_stage">启动一线治疗时AnnArbor分期：</label>
+                <div class="options">
+                    <!-- <div class="option" onclick="selectOption(this); document.getElementById('initial_stage').value = 0;">0</div> -->
+                    <div class="option" onclick="selectOption(this); document.getElementById('initial_stage').value = 1;">I期</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('initial_stage').value = 2;">II期</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('initial_stage').value = 3; incrementFLIPI1();">III期</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('initial_stage').value = 4; incrementFLIPI1();">IV期</div>
+                    <!-- <div class="option" onclick="selectOption(this); document.getElementById('initial_stage').value = 5;">5</div> -->
+                </div>
+                <input type="hidden" id="initial_stage" name="initial_stage" value="">
+            </div>
+            
+            <div class="form-group">
+                <label for="lymph_node_count">启动一线治疗时受累淋巴结区数目（大于等于5预后不良）:</label>
+                <input type="number" id="lymph_node_count" name="lymph_node_count" min="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="bone_marrow_involvement">启动一线治疗时骨髓是否受累：</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('bone_marrow_involvement').value = '否';">否</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('bone_marrow_involvement').value = '是';">是</div>
+                </div>
+                <input type="hidden" id="bone_marrow_involvement" name="bone_marrow_involvement" value="">
+            </div>
+            
+            <div class="form-group">
+                <label for="max_tumor_size">启动一线治疗时最大病灶直径（cm）：</label>
+                <input type="number" id="max_tumor_size" name="max_tumor_size" min="0" step="any">
+            </div>
+            
+            <div class="form-group">
+                <label for="suv_max">启动一线治疗时病灶的最高 SUVmax:</label>
+                <input type="number" id="suv_max" name="suv_max" min="0" step="any">
+            </div>
+            
+            <div class="form-group">
+                <label for="wbc">启动一线治疗时白细胞（WBC）数值（10^9/L）：</label>
+                <input type="number" id="wbc" name="wbc" min="0" step="any">
+            </div>
+            
+            <div class="form-group">
+                <label for="monocyte">启动一线治疗时单核细胞绝对值（10^9/L）:</label>
+                <input type="number" id="monocyte" name="monocyte" min="0" step="any">
+            </div>
+                     
+            <div class="form-group">
+                <label for="lymphocyte">启动一线治疗时淋巴细胞绝对值（10^9/L）:</label>
+                <input type="number" id="lymphocyte" name="lymphocyte" min="0" step="any">
+            </div>
+            
+            <div class="form-group">
+                <label for="lymph_monocyte_ratio">启动一线治疗时淋巴单核细胞比:</label>
+                <input type="number" id="lymph_monocyte_ratio" name="lymph_monocyte_ratio" min="0" step="any">
+            </div>
+            
+            <div class="form-group">
+                <label for="hgb">启动一线治疗时血红蛋白（HGB）数值（g/L）（小于120是预后不良因素）:</label>
+                <input type="number" id="hgb" name="hgb" min="0" step="any">
+            </div>
+            
+            <div class="form-group">
+                <label for="plt">启动一线治疗时血小板（PLT）数值（10^9/L）:</label>
+                <input type="number" id="plt" name="plt" min="0">
+            </div>
+            
+            <div class="form-group">
+                <!-- <label for="ldh">LDH（首次治疗）>240是预后不良因素:</label> -->
+                <label for = "ldh">启动一线治疗时乳酸脱氢酶（LDH）数值（IU/L）: </label>
+                <input type="number" id="ldh" name="ldh" min="0">
+            </div>
+            
+            <div class="form-group">
+                <!-- <label for="beta2_mg">β2微球蛋白β2-MG（首次治疗）>3是预后不良因素:</label> -->
+                <label for = "beta2_mg"> 启动一线治疗时β2微球蛋白（β2-MG）（>3mg/L 是预后不良因素）：</label>
+                <input type="number" id="beta2_mg" name="beta2_mg" min="0" step="any">
+            </div>
+            
+            <div class="form-group">
+                <label for="reason_for_treatment">启动一线治疗原因:</label>
+                <div class="options">
+                    <!-- 其他选项保持不变 -->
+                    <div class="option" onclick="selectOption(this); document.getElementById('reason_for_treatment').value = '1 ：受累淋巴结区≥3个，直径≥3cm';">1 ：受累淋巴结区≥3个，直径≥3cm</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('reason_for_treatment').value = '2 ：任何淋巴结或者结外肿块直径≥7cm';">2 ：任何淋巴结或者结外肿块直径≥7cm</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('reason_for_treatment').value = '3 ：B症状';">3 ：B症状</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('reason_for_treatment').value = '4 ：脾大';">4 ：脾大</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('reason_for_treatment').value = '5 ：胸腔积液、腹水';">5 ：胸腔积液、腹水</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('reason_for_treatment').value = '6 ：白细胞＜1.0x10^9/L或血小板＜100x10^9/L';">6 ：白细胞＜1.0x10^9/L或血小板＜100x10^9/L，或白血病（恶性细胞＞5x10^9/L</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('reason_for_treatment').value = '8 ：肿瘤快速进展';">8 ：肿瘤快速进展</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('reason_for_treatment').value = '10 ：HGB<120g/L';">HGB<120g/L</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('reason_for_treatment').value = '11 ：β2-MG≥3mg/L';">β2-MG≥3mg/L</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('reason_for_treatment').value = '12 ：LDH高于正常值';">LDH高于正常值</div>
+                    <!-- 修改后的第九个选项 -->
+                    <div id="other-option" class="option" onclick="toggleOtherInput(); selectOption(this); document.getElementById('reason_for_treatment')">9 ：其他（请记录具体因素）</div>
+                </div>
+                <input type="hidden" id="reason_for_treatment" name="reason_for_treatment" value="">
+                <!-- 新增的输入框 -->
+                <div id="other-input-container" style="display:none;">
+                    <input type="text" id="other_reason" name="other_reason" placeholder="请输入具体因素">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="classification">一线治疗方案：</label>
+                <div class="options">
+                    <!-- <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '';">请选择 </div> -->
+                    <!-- <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '1 : chop';">1 : chop </div> -->
+                    <!-- <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '2 : fc';">2 : fc </div> -->
+                    <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '3 : rchop';">1 : RCHOP </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '11 : GCHOP';">2 : GCHOP </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '10 : RB';">3 : RB </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '14 : GB';">4 : GB </div>
+                    <!-- <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '4 : rfc';">4 : rfc </div> -->
+                    <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '6 : rcvp';">5 : RCVP </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '5 : cvp';">6 : GCVP </div>
+                    <!-- <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '7 : 放疗';">7 : 放疗 </div> -->
+                    <!-- <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '8 : R单药';">8 : R单药 </div> -->
+                    <!-- <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '9 : 放化疗';">9 : 放化疗 </div> -->
+                    <!-- <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '12 : WW';">12 : WW </div> -->
+                    <!-- <div class="option" onclick="selectOption(this); document.getElementById('classification').value = '13 : 姑息对症';">13 : 姑息对症 </div> -->
+                </div>
+                <input type="hidden" id="classification" name="classification" value="">
+            </div>
+            
+            <div class="form-group">
+                <label for="efficacy_group">一线治疗后疗效评价：</label>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('efficacy_group').value = 'CR';">CR </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('efficacy_group').value = 'PD';">PD </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('efficacy_group').value = 'PR';">PR </div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('efficacy_group').value = 'SD';">SD </div>
+                </div>
+                <input type="hidden" id="efficacy_group" name="efficacy_group" value="">
+            </div>
+            
+            
+            <!-- !!!!!!!!!!!!!!!!!!!!!-->      
+            
+            <div class="form-group">
+                <label for="FLIPI_1">启动一线治疗时FLIPI-1评分：</label>
+                <button type="button" class="calculate-button" onclick="calculateFLIPI1()">自动计算</button>
+                <div class="options" id = "FLIPI_1_options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_1').value = 0;">0</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_1').value = 1;">1</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_1').value = 2;">2</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_1').value = 3;">3</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_1').value = 4;">4</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_1').value = 5;">5</div>
+                </div>
+                <input type="hidden" id="FLIPI_1" name="FLIPI_1" value="">
+            </div>
+            
+            <div class="form-group">
+                <label for="FLIPI_2">启动一线治疗时FLIPI2评分：</label>
+                <button type="button" class="calculate-button" onclick="calculateFLIPI2()">自动计算</button>
+                <div class="options" id = "FLIPI_2_options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_2').value = 0;">0</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_2').value = 1;">1</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_2').value = 2;">2</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_2').value = 3;">3</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_2').value = 4;">4</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('FLIPI_2').value = 5;">5</div>
+                </div>
+                <input type="hidden" id="FLIPI_2" name="FLIPI_2" value="">
+            </div>
+            
+            <div class="form-group">
+                <label for="PRIMA_PI">启动一线治疗时PRIMA-PI评分：</label>
+                <button type="button" class="calculate-button" onclick="calculatePRIMAPI()">自动计算</button>
+                <div class="options" id = "PRIMA_PI_options">
+                    <div class="option" onclick="selectOption(this); document.getElementById('PRIMA_PI').value = 0;">0</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('PRIMA_PI').value = 1;">1</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('PRIMA_PI').value = 2;">2</div>
+                </div>
+                <input type="hidden" id="PRIMA_PI" name="PRIMA_PI" value="">
+            </div>
+            
+            
+            <div class="form-group">
+                <label for="predict_pod24">预计24个月内进展风险等级</label>
+                <div class="options" id="predict_pod24">
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_pod24').value = 1;"> 0-10%</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_pod24').value = 2;">10-20%</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_pod24').value = 3;">20-30%</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_pod24').value = 4;">30-40%</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_pod24').value = 5;">40-50%</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_pod24').value = 6;">50-60%</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_pod24').value = 7;">60-70%</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_pod24').value = 8;">70-80%</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_pod24').value = 9;">80-90%</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_pod24').value = 10;">90-100%</div>
+                </div>
+                <input type="hidden" id="predict_pod24" name="predict_pod24" value="">
+            </div>
+            
+            <div class="form-group">
+                <label for="predict_uplift">预计采取 R 维持获益等级</label>
+                <div class="options" id="predict_uplift">
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_uplift').value = 1;">很低(低于20%人群)</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_uplift').value = 2;">较低(低于50%人群)</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_uplift').value = 4;">较高(高于50%人群)</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('predict_uplift').value = 5;">很高(高于80%人群)</div>
+                </div>
+                <input type="hidden" id="predict_uplift" name="predict_uplift" value="">
+            </div>
+            
+            <div class="form-group">
+                <label for="conc_human_0">您是否推荐患者采取 R 维持？</label>
+                <div class="options" id="conc_human_0">
+                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human_0').value = 1;">强烈不推荐</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human_0').value = 2;">不推荐</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human_0').value = 3;">比较推荐</div>
+                    <div class="option" onclick="selectOption(this); document.getElementById('conc_human_0').value = 4;">非常推荐</div>
+                </div>
+                <input type="hidden" id="conc_human_0" name="conc_human_0" value="">
+            </div>
+            
+            <div class="button-container">
+                <button type="submit">开始预测</button>
+                <button type="button" onclick="clearForm()">清空</button>
+            </div>
+        </form>
+            
+        <div class = "result" id = "resultDisplay"></div>
+    
+    <script>
+    function calculateFLIPI1() {
+        const ageInput = document.querySelector('#Form input[name="treatment_age"]');
+        const stage = document.querySelector('#Form input[name="initial_stage"]');
+        const lymph_node_count = document.querySelector('#Form input[name="lymph_node_count"]');
+        const hgb = document.querySelector('#Form input[name="hgb"]');
+        const ldh = document.querySelector('#Form input[name="ldh"]');
+        let score = 0;
+        if (ageInput && ageInput.value.trim() !== '') {
+            if (ageInput.value > 60) { score = score+1; } 
+        }
+        if (stage && stage.value.trim() !== '') {
+            if (stage.value > 2) { score = score+1; } 
+        }
+        if (hgb && hgb.value.trim() !== '') {
+            if (hgb.value < 120) { score = score+1; } 
+        }
+        if (ldh && ldh.value.trim() !== '') {
+            if (ldh.value > 240) { score = score+1; } 
+        }
+        if (lymph_node_count && lymph_node_count.value.trim() !== '') {
+            if (lymph_node_count.value > 4) { score = score+1; } 
+        }
+        const calculatedScore = score;
+        document.getElementById('FLIPI_1').value = calculatedScore;
+        const options = document.querySelectorAll('#FLIPI_1_options .option');
+        options.forEach(option => {
+            if (parseInt(option.textContent) === calculatedScore) {
+                option.click();
+                option.classList.add('selected'); // 添加选中样式（如果需要）
+            }
+        });
+        alert(`FLIPI-1 得分已自动计算为：${calculatedScore}`);
+    }
+    
+    function calculateFLIPI2() {
+        const ageInput = document.querySelector('#Form input[name="treatment_age"]');
+        const hgb = document.querySelector('#Form input[name="hgb"]');
+        const max_tumor_size = document.querySelector('#Form input[name="max_tumor_size"]');
+        const beta2_mg = document.querySelector('#Form input[name="beta2_mg"]');
+        const bone_marrow_involvement = document.querySelector('#Form input[name="bone_marrow_involvement"]');
+        let score = 0;
+        if (ageInput && ageInput.value.trim() !== '') {
+            if (ageInput.value > 60) { score = score+1; } 
+        }
+        if (hgb && hgb.value.trim() !== '') {
+            if (hgb.value < 120) { score = score+1; } 
+        }
+        if (max_tumor_size && max_tumor_size.value.trim() !== '') {
+            if (max_tumor_size.value > 6) { score = score+1; } 
+        }
+        if (beta2_mg && beta2_mg.value.trim() !== '') {
+            if (beta2_mg.value > 3) { score = score+1; } 
+        }
+        if (bone_marrow_involvement && bone_marrow_involvement.value.trim() !== '') {
+            if (bone_marrow_involvement.value == '是') { score = score+1; } 
+        }
+        const calculatedScore = score;
+        document.getElementById('FLIPI_2').value = calculatedScore;
+        const options = document.querySelectorAll('#FLIPI_2_options .option');
+        options.forEach(option => {
+            if (parseInt(option.textContent) === calculatedScore) {
+                option.click();
+                option.classList.add('selected'); // 添加选中样式（如果需要）
+            }
+        });
+        alert(`FLIPI-2 得分已自动计算为：${calculatedScore}`);
+    }
+    
+    function calculatePRIMAPI() {
+        const beta2_mg = document.querySelector('#Form input[name="beta2_mg"]');
+        const bone_marrow_involvement = document.querySelector('#Form input[name="bone_marrow_involvement"]');
+        let score = 0;
+        if (beta2_mg && beta2_mg.value.trim() !== '') {
+            if (beta2_mg.value > 3) { score = score+1; } 
+        }
+        if (bone_marrow_involvement && bone_marrow_involvement.value.trim() !== '') {
+            if (bone_marrow_involvement.value == '是') { score = score+1; } 
+        }
+        const calculatedScore = score;
+        document.getElementById('PRIMA_PI').value = calculatedScore;
+        const options = document.querySelectorAll('#PRIMA_PI_options .option');
+        options.forEach(option => {
+            if (parseInt(option.textContent) === calculatedScore) {
+                option.click();
+                option.classList.add('selected'); // 添加选中样式（如果需要）
+            }
+        });
+        alert(`PRIMA_PI 得分已自动计算为：${calculatedScore}`);
+    }
+    
+    $(document).ready(function(){
+    $('#Form').submit(function(event){
+        event.preventDefault();
+        var formData = $(this).serialize();
+
+        $.ajax({
+            url: '/predict',
+            type: 'POST',
+            data: formData,
+            success: function(response){
+                // 清空之前的展示内容
+                $('#resultDisplay').empty();
+
+                // 添加预测结果的标题
+                $('#resultDisplay').append('<h2>预测结果:</h2>');
+
+                // 动态生成各个部分的内容
+                const sections = [
+                    { title: '一、进展风险预测结果', imgSrc: response.result[0] },
+                    { title: '二、进展风险走势', imgSrc: response.result[1] },
+                    { title: '三、R维持获益情况评估', imgsSrc: [response.result[2], response.result[3]] }
+                ];
+
+                sections.forEach(section => {
+                    $('#resultDisplay').append(`<h3>${section.title}</h3>`);
+                    if (Array.isArray(section.imgsSrc)) {
+                        section.imgsSrc.forEach(imgSrc => {
+                            addImageWithCaption(imgSrc);
+                        });
+                    } else {
+                        addImageWithCaption(section.imgSrc);
+                    }
+                });
+
+                // 特征指标部分
+                $('#resultDisplay').append('<h3>四、各类特征指标</h3>');
+                for(let i = 0; i < response.result[4].length; i++) {
+                    addImageWithCaption(response.result[4][i][1], response.result[4][i][0], 1);
+                }
+
+                // 用户反馈选项
+                appendUserFeedbackOption();
+
+                $('#resultDisplay').show();
+            },
+            error: function(error){
+                $('#resultDisplay').html("<p>Invalid input</p>").show();
+            }
+        });
+    });
+
+    function addImageWithCaption(imageData, captionText, scale = 0) {
+        let container = $('<div class="image-container"></div>');
+        let imgCaption = $(`<div class="image-caption">${captionText || ''}</div>`);
+        let imgElement = $(`<img src="data:image/png;base64,${imageData}" alt="${captionText}">`);
+        if (scale === 0) {
+            imgElement.css({ 'width': '50%', 'height': '50%' });
+        }
+        container.append(imgCaption, imgElement);
+        $('#resultDisplay').append(container);
+    }
+
+    function appendUserFeedbackOption() {
+        $('#resultDisplay').append(`
+        <div class="form-group">
+            <label for="conc_human_1">您最终是否推荐患者采取 R 维持？</label>
+            <div class="options">
+                <div class="option" onclick="selectOption(this); document.getElementById('conc_human_1').value = 1;">强烈不推荐</div>
+                <div class="option" onclick="selectOption(this); document.getElementById('conc_human_1').value = 2;">不推荐</div>
+                <div class="option" onclick="selectOption(this); document.getElementById('conc_human_1').value = 3;">比较推荐</div>
+                <div class="option" onclick="selectOption(this); document.getElementById('conc_human_1').value = 4;">非常推荐</div>
+            </div>
+            <input type="hidden" id="conc_human_1" name="conc_human_1" value="">
+        </div>
+        <div class="button-container-2">
+            <button type="button" id="submitFeedback">提交并保存当前患者数据</button>
+        </div>
+        `);
+
+        $('#submitFeedback').click(function() {
+            var formData = $('#Form').serializeArray();
+            var concHuman1 = $('#conc_human_1').val();
+            formData.push({ name: 'conc_human_1', value: concHuman1 });
+            var dataToSave = $.param(formData);
+            $.ajax({
+                url: '/save',
+                type: 'POST',
+                data: dataToSave,
+                success: function(response) {
+                    alert('数据已保存！');
+                    clearForm();
+                },
+                error: function(error) {
+                    alert('保存数据时出错，请重试！');
+                }
+            });
+        });
+    }
+});
+        
+        function selectOption(option) {
+            const parent = option.parentNode;
+            const options = parent.getElementsByClassName('option');
+            for (let i = 0; i < options.length; i++) {
+                options[i].classList.remove('selected');
+            }
+            option.classList.add('selected');
+        }
+        
+        function clearForm() {
+            $('#Form')[0].reset();
+            const selectedOptions = document.querySelectorAll('.option.selected');
+            selectedOptions.forEach(option => {
+                option.classList.remove('selected');
+            });
+            const resultSection = document.querySelector('.result-section');
+            if (resultSection) {
+                resultSection.innerHTML = '';
+            }
+            const textInputs = document.querySelectorAll('input[type="text"], input[type="number"], textarea');
+            textInputs.forEach(input => {
+                input.value = '';
+            });
+            const otherInputContainer = document.getElementById('other-input-container');
+            if (otherInputContainer) {
+                otherInputContainer.style.display = 'none';
+                const otherReasonInput = document.getElementById('other_reason');
+                if (otherReasonInput) {
+                    otherReasonInput.value = '';
+                }
+            }
+            const hiddenInputs = document.querySelectorAll('input[type="hidden"]');
+            hiddenInputs.forEach(input => {
+                input.value = '';
+            });
+            $('#resultDisplay').empty().hide();
+        }
+        
+        function toggleOtherInput() {
+            var container = document.getElementById('other-input-container');
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                document.getElementById('reason_for_treatment').value = '9 ：其他（请记录具体因素）';
+            } else {
+                container.style.display = 'none';
+                document.getElementById('reason_for_treatment').value = '';
+            }
+        }
+
+        // Initialize default selections
+        window.onload = function() {
+            const formGroups = document.querySelectorAll('.form-group');
+            formGroups.forEach(formGroup => {
+                const selectedOption = formGroup.querySelector('.option[selected]');
+                if (selectedOption) {
+                    selectedOption.classList.add('selected');
+                }
+            });
+        };
+
+    </script>
+</body>
+</html>

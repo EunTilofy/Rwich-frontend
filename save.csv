@@ -1,0 +1,12 @@
+patient_id,gender,max_tumor_size,suv_max,ecog_score,b_symptoms,initial_stage,treatment_age,pathology_grade,lymph_node_count,bone_marrow_involvement,lymph_node_size,ldh,beta2_mg,wbc,hgb,plt,monocyte,lymphocyte,lymph_monocyte_ratio,reason_for_treatment,classification,efficacy_group,rweichi,fps,progress_after,pod24,FLIPI_1,FLIPI_2,PRIMA_PI,predict_pod24,predict_uplift,conc_human_0,conc_human_1
+test,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,2
+test,,,,,,,,,,,,,,,,,,,,,,,,,,,0,,,,,,3
+test,,,,,,,,,,,,,,,,,,,,,,,,,,,0,,,,,,
+test,男,,,2,无,3,,,,,,,,,,23423,,,,,,,,,,,2,,,,,,3
+222,,,,2,,,,1-2级,,,,,,,,,,,,,,,,,,,,,,,,,2
+test,,,,,,,,,,,,,,,,,,,,,,,,,,,3,,,,,,
+test,,,,,,,,,,,,,,,,,,,,,,,,,,,0,,,,,,2
+test,,,,,,,,,,,,,,,,,,,,,,,,,,,0,,,,,,2
+rwar,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,2
+test,,,,,,,,,,,,,,,,,,,,,,,,,,,3,2,0,,,,
+test,,,,,,,,,,,,,,,,,,,,,,,,,,,0,0,0,,,,
