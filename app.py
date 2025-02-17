@@ -382,15 +382,17 @@ def main_solve(df):
     pod_val = []
     pod_per = []
     all_pod_val = []
+    # df.drop('Rweichi', axis=1)
     uplift_val.append(DML_6.predict(df, if_train=True, if_cali=False)[0])
     uplift_val.append(DML_12.predict(df, if_train=True, if_cali=False)[0])
     uplift_val.append(DML_24.predict(df, if_train=True, if_cali=False)[0])
     uplift_val.append(DML_36.predict(df, if_train=True, if_cali=False)[0])
     
-    pod_val.append(DML_6.predict_outcome(df, if_train=True, if_cali=False)[0])
-    pod_val.append(DML_12.predict_outcome(df, if_train=True, if_cali=False)[0])
-    pod_val.append(DML_24.predict_outcome(df, if_train=True, if_cali=False)[0])
-    pod_val.append(DML_36.predict_outcome(df, if_train=True, if_cali=False)[0]) 
+    pod_val.append(DML_6.predict_outcome(df, if_train=False, if_cali=True)[0][0])
+    pod_val.append(DML_12.predict_outcome(df, if_train=False, if_cali=True)[0][0])
+    pod_val.append(DML_24.predict_outcome(df, if_train=False, if_cali=True)[0][0])
+    pod_val.append(DML_36.predict_outcome(df, if_train=False, if_cali=True)[0][0])
+    # print ("pod_val[0] = ", pod_val[2])
     pod_per.append(100 * ((predict_y_6 <= pod_val[0]).mean()))
     pod_per.append(100 * ((predict_y_12 <= pod_val[1]).mean()))
     pod_per.append(100 * ((predict_y_24 <= pod_val[2]).mean()))
@@ -442,13 +444,13 @@ def predict(inputs):
         '启动一线治疗原因（新补充）': 4 if inputs[19] == '4：脾大' else np.nan,
         '分类1(1-chop;2-fc;3-rchop;4-rfc;5-cvp;6-rcvp;7-放疗；8-R单药；9-放化疗；10-RB;11-GCHOP;12-WW;13-姑息对症)': int(inputs[20].split(' ')[0]) if pd.notna(inputs[20]) else np.nan,
         '评效分组1': inputs[21] if pd.notna(inputs[21]) else np.nan,
-        'Rweichi': 1 if inputs[22] == "有" else 0,
-        '一线PFS(确诊时间-进展时间，需要写函数)': float(inputs[23]) if pd.notna(inputs[23]) else np.nan,
-        '一线后是否进展': 1 if inputs[24] == "是" else 0,
-        'pod24': 1 if inputs[25] == "有" else 0,
-        '治疗时FLIPI-1（最终版）': float(inputs[26]) if pd.notna(inputs[26]) else np.nan,
-        '治疗FLIPI2（最终版）': float(inputs[27]) if pd.notna(inputs[27]) else np.nan,
-        '一线治疗时PRIMA-PI': float(inputs[28]) if pd.notna(inputs[28]) else np.nan,
+        # 'Rweichi': 1 if inputs[22] == "有" else 0,
+        # '一线PFS(确诊时间-进展时间，需要写函数)': float(inputs[23]) if pd.notna(inputs[23]) else np.nan,
+        # '一线后是否进展': 1 if inputs[24] == "是" else 0,
+        # 'pod24': 1 if inputs[25] == "有" else 0,
+        # '治疗时FLIPI-1（最终版）': float(inputs[26]) if pd.notna(inputs[26]) else np.nan,
+        # '治疗FLIPI2（最终版）': float(inputs[27]) if pd.notna(inputs[27]) else np.nan,
+        # '一线治疗时PRIMA-PI': float(inputs[28]) if pd.notna(inputs[28]) else np.nan,
     }
     
     input_df = pd.DataFrame([input_data])
@@ -625,4 +627,4 @@ def save_route():
     return jsonify(result = None)
 
 if __name__ == '__main__':
-    app.run(debug=True, threaded = False)
+    app.run(host="0.0.0.0", port="8081", debug=True, threaded = False)
